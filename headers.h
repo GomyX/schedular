@@ -12,6 +12,8 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
+#include "pq.h"
+#include "List.h"
 
 typedef short bool;
 #define true 1
