@@ -2,11 +2,31 @@
 
 void clearResources(int);
 
+struct process{
+        int id , arrival, runtime, priority;
+};
+
+void read_ints (const char* file_name)
+{
+  FILE* file = fopen (file_name, "r");
+  struct process p;
+
+  fscanf (file, "%d %d %d %d", &p.id, &p.arrival, &p.runtime, &p.priority);    
+  while (!feof (file))
+    {  
+      printf ("ID: %d \t arrival: %d \t runtime: %d \t priority: %d \n",p.id,p.arrival, p.runtime, p.priority);
+      fscanf (file, "%d %d %d %d", &p.id, &p.arrival, &p.runtime, &p.priority);     
+    }
+  fclose (file);        
+}
+
 int main(int argc, char * argv[])
 {
     signal(SIGINT, clearResources);
     // TODO Initialization
     // 1. Read the input files.             omarayyad 
+
+    read_ints("test.txt");
     // 2. Ask the user for the chosen scheduling algorithm and its parameters, if there are any.   //printf ("enter the algorithim you want    1)jfs   2)sfst   3)jfkdkjf") scanf (int n =1 2 3 )   thabet&saber
     // 3. Initiate and create the scheduler and clock processes.                   s= scedular (n)   thabet&saber
     // 4. Use this function after creating the clock process to initialize clock    thabet&saber
