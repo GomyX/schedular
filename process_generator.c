@@ -7,22 +7,103 @@ void clearResources(int);
 void read_ints (const char* file_name)
 {
   FILE* file = fopen (file_name, "r");
-  struct process p[10];
-  struct List process_list;
+  process p[10];
+  //struct List process_list;
+  heap_t *list = (heap_t *)calloc(1, sizeof(heap_t));
+  
+  
  
   
   for (int i = 0; i < 100; i++){
     if (!feof (file)){
-      fscanf (file, "%d %d %d %d", &p[i].id, &p[i].arrival, &p[i].runtime, &p[i].priority);
+      fscanf (file, "%d %d %d %d", &p[i].ID, &p[i].ArrTime, &p[i].RunTime, &p[i].Priority);
       //printf ("ID: %d \t arrival: %d \t runtime: %d \t priority: %d \n",p[i].id,p[i].arrival, p[i].runtime, p[i].priority);
-      struct MNode x= p[i];
-      ins(process_list, NULL,x);
+      //struct MNode x= p[i];
+      //ins(process_list, NULL,x);
+      push(list,p[i].ArrTime,&p[i]);
+      
     }
 
   }
+  while(top(list)!=NULL){  //test read & data structure
+        process *puff;
+        puff=pop(list);
+        printf("Process %d is out\n",puff->ID);
+    }
   
   fclose (file);        
 }
+
+struct msgbuff  // buffer to store process in
+{
+    long mtype;
+    int ID;
+    int ArrTime;
+    int RunTime;
+    int Priority;
+};
+
+
+void sendinfo(int clk, heap_t *list)
+{
+    struct msgbuff message;
+    key_t generator_id;
+    int sendp;
+    int recievep;
+
+
+   generator_id=msgget((key_t)1234, 0666 | IPC_CREAT);
+
+   while(top(list)!=NULL)
+    {
+       if(top(list)->ArrTime<=clk)   
+        {
+           process *sendProcess;
+            sendProcess=pop(list);             //copying data of process to buffer
+
+            message.ID=sendProcess->ID;
+            message.ArrTime=sendProcess->ArrTime;
+            message.Priority=sendProcess->Priority;
+            message.RunTime=sendProcess->RunTime;
+            
+            message.mtype=1;
+
+            int size=sizeof(message)-sizeof(message.mtype);
+            printf("%d\n",size);
+            sendp=msgsnd(generator_id,&message,size,!IPC_NOWAIT);
+
+            if(sendp==-1)         //ckeckers
+            {
+                printf("error to send\n");
+                exit(-1);
+            }
+            else
+            {
+                printf("message send\n"); 
+                 
+            }
+
+        }
+    }
+    message.ID=0;           //when the reciever should stop, when he find ID=0;
+    message.ArrTime=0;
+    message.Priority=0;
+    message.RunTime=0;
+
+    int size=sizeof(message)-sizeof(message.mtype);
+    sendp=msgsnd(generator_id,&message,size,!IPC_NOWAIT);
+    if(sendp==-1)
+    {
+        printf("error to send\n");
+        exit(-1);
+    }
+    else
+    {
+        printf("message send\n");
+            
+    }
+}
+
 
 int main(int argc, char * argv[])
 {
@@ -45,6 +126,7 @@ int main(int argc, char * argv[])
     // 5. Create a data structure for processes and provide it with its parameters.         //we will store the processes as STRUCTS in a LinkedList  ayyad &Nasrah
     
     // 6. Send the information to the scheduler at the appropriate time.                    //function(clk,LinkedList) return processToBeSent         nasrah
+    sendinfo(x,list)
     // 7. Clear clock resources
     destroyClk(true);
 }

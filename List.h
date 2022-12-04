@@ -83,7 +83,7 @@ NODE removeNode(LIST, NODE);
 
 LIST newList(void)
 {
-   LIST tl = malloc(sizeof(struct List));
+   LIST tl = (LIST)malloc(sizeof(struct List));
    if (tl != NULL)
    {
       tl->tail_pred = (NODE)&tl->head;
@@ -112,7 +112,7 @@ NODE getTail(LIST l)
 void addTail(LIST l, process n)
 {
    //  n->succ = (NODE)&l->tail;
-   struct MNode *node = malloc(sizeof(struct MNode));
+   struct MNode *node = (NODE)malloc(sizeof(struct MNode));
    node->data.ID = n.ID;
    node->data.ArrTime = n.ArrTime;
    node->data.PID = n.PID;
@@ -143,7 +143,7 @@ void addTail(LIST l, process n)
 
 void addHead(LIST l, process n)
 {
-   struct MNode *node = malloc(sizeof(struct MNode));
+   struct MNode *node = (NODE)malloc(sizeof(struct MNode));
    node->data.ID = n.ID;
    node->data.ArrTime = n.ArrTime;
    node->data.PID = n.PID;

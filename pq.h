@@ -1,38 +1,33 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// struct process//Data_Struc that use of each process
-// {
-//     int ID;
-//     int ArrTime;
-//     int RunTime;
-//     int Priority;
-//     int PID;
-//     int RemaingTime;
-//     int WatingTime;
-//     int Stoped;
-//     int Running;
-//     int memsize;
-//     int memindx;
-// } ;
+typedef struct //Data_Struc that use of each process
+{
+    int ID;
+    int ArrTime;
+    int RunTime;
+    int Priority;
+    int PID;
+    int RemaingTime;
+    int WatingTime;
+    int Stoped;
+    int Running;
+    int memsize;
+    int memindx;
+} process;
 
-
-struct process{
-        int id , arrival, runtime, priority;
-};
-
-struct node_t
+typedef struct
 {
     int priority;
     process data;
-} ;
+} node_t;
 
-struct heap_t
+typedef struct
 {
     node_t *nodes;
     int len;
     int size;
-} ;
+} heap_t;
 
 void push(heap_t *h, int priority, process *data)
 {
@@ -70,7 +65,7 @@ process *pop(heap_t *h)
     {
         return NULL;
     }
-    process *pdata = malloc(sizeof(process));
+    process *pdata = (process*)malloc(sizeof(process));
     pdata->ID = h->nodes[1].data.ID;
     pdata->ArrTime = h->nodes[1].data.ArrTime;
     pdata->RunTime = h->nodes[1].data.RunTime;
