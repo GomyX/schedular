@@ -56,10 +56,10 @@ void recivedinfo(heap_t *list)
 
 int main(int argc, char * argv[])
 {
-    initClk();
+//     initClk();
     
-    //TODO implement the scheduler :)
-    //upon termination release the clock resources
+//     //TODO implement the scheduler :)
+//     //upon termination release the clock resources
     
-    destroyClk(true);
+//     destroyClk(true);
 }
