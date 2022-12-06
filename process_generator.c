@@ -1,4 +1,5 @@
 #include "headers.h"
+#include "math.h"
 
 void clearResources(int);
 
@@ -23,6 +24,54 @@ heap_t* read_ints (const char* file_name)
   fclose (file);   
   return process_list;     
 }
+
+
+double calcWait(heap_t* list){   // calculate average waiting time 
+    double time = 0;
+    for (int i= 0; i < list->len ; i++){
+        time = time + pop(list)->WatingTime; 
+    }
+
+    time = time - list->len;
+
+    return time;
+}
+
+double calcWTA(heap_t* list){ // calculate average WTA
+    double WTA = 0;
+    for (int i = 0 ; i < list->len; i++){
+        process* prcs = pop(list);
+        WTA = WTA + ((prcs->Stoped - prcs->ArrTime) / prcs->Running);
+    }
+
+    WTA = WTA / list->len;
+    return WTA;
+}
+
+// double stdWTA(heap_t* list){ // calculate standard derviation of WTA 
+//     double stdWTA = 0;
+//     const int list_length = list->len;
+//     double sum= 0;
+//     double summition =0;
+//     double mean = 0;
+//     heap_t *wait_list = (heap_t *)calloc(1, sizeof(heap_t));
+//     for (int i =0; i < list->len; i++){
+//         process* prcs = pop(list);
+//         sum = sum +  ((prcs->Stoped - prcs->ArrTime) / prcs->Running);
+//         push(wait_list, prcs->ArrTime,prcs);
+//     }
+
+//     mean = sum / list_length;
+
+//    for (int i = 0; i < list_length; i++){
+//     process* prcs = pop(wait_list);
+//     summition = summition + (pow(((prcs->Stoped - prcs->ArrTime) / prcs->Running -mean),2));
+//    }
+
+//    stdWTA = summition/(list_length-1);
+
+//     return stdWTA;
+// } 
 
 struct msgbuff  // buffer to store process in
 {
