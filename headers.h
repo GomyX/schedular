@@ -10,6 +10,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <signal.h>
+
+
 #include <stdlib.h>
 #include <string.h>
 //#include "pq.h"
@@ -17,7 +19,7 @@
 
 
 
-//typedef short bool;
+typedef short bool;
 #define true 1
 #define false 0
 
@@ -63,11 +65,11 @@ void initClk()
  *                      It terminates the whole system and releases resources.
 */
 
-// void destroyClk(bool terminateAll)
-// {
-//     shmdt(shmaddr);
-//     if (terminateAll)
-//     {
-//         killpg(getpgrp(), SIGINT);
-//     }
-// }
+void destroyClk(bool terminateAll)
+{
+    shmdt(shmaddr);
+    if (terminateAll)
+    {
+        killpg(getpgrp(), SIGINT);
+    }
+}

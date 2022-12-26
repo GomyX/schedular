@@ -1,173 +1,227 @@
 #include "headers.h"
-#include "math.h"
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <unistd.h>
+#include <sys/msg.h>
 
+
+//---------------- some initializations --------------
+typedef enum scheduling_algorithms_ {HPF, SRTN,SJF } scheduling_algorithms;
+scheduling_algorithms chosen_alg;
 void clearResources(int);
+int upQ;
+int ended=0;
+void handle(int signum) //handeler that change ended form 0 to 1 when the scheduler finish.
+{
+    ended = 1;
+}
+//-----------------  read file  --------------------------------
 
-
+/// @brief function to read inputs 
+/// @param file_name 
+/// @return a process list containing processes
 heap_t* read_ints (const char* file_name)
 {
   FILE* file = fopen (file_name, "r");
   process p[10];
-  //struct List process_list;
   heap_t *process_list = (heap_t *)calloc(1, sizeof(heap_t));
 
   
   for (int i = 0; i < 100; i++){
     if (!feof (file)){
       fscanf (file, "%d %d %d %d", &p[i].ID, &p[i].ArrTime, &p[i].RunTime, &p[i].Priority);
-      //printf ("ID: %d \t arrival: %d \t runtime: %d \t priority: %d \n",p[i].id,p[i].arrival, p[i].runtime, p[i].priority);
-      //struct MNode x= p[i];
-      //ins(process_list, NULL,x);
       push(process_list,p[i].ArrTime,&p[i]);
+      printf("list size:%d,ID:%d,ArrTime:%d\n",process_list->len,p[i].ID,p[i].ArrTime);
+
     }
   }  
+
   fclose (file);   
   return process_list;     
 }
+//-------------------  get algorithm num  ----------------------------------------
 
-
-double calcWait(heap_t* list){   // calculate average waiting time 
-    double time = 0;
-    for (int i= 0; i < list->len ; i++){
-        time = time + pop(list)->WatingTime; 
-    }
-
-    time = time - list->len;
-
-    return time;
+/// @brief function to return the algorithm number to be sent to schduler
+/// @return char of the algorithm num
+char* get_algo_num()
+{
+    if(chosen_alg ==HPF)
+        return "1";
+    if(chosen_alg ==SRTN)
+        return "2";
+    if(chosen_alg ==SJF)
+        return "3";
 }
+//----------------  ask about which algorithm  ------------------------------------------------
 
-double calcWTA(heap_t* list){ // calculate average WTA
-    double WTA = 0;
-    for (int i = 0 ; i < list->len; i++){
-        process* prcs = pop(list);
-        WTA = WTA + ((prcs->Stoped - prcs->ArrTime) / prcs->Running);
+/// @brief function to ask the user which algorithm to use 
+/// @return the algorithm to be used in the enum of algorithms
+scheduling_algorithms ask_for_alg(){
+ 
+       
+    int answer;
+    scheduling_algorithms chosed_alg;
+    answer = -1;
+    while(!(answer ==1 || answer ==2 | answer ==3))
+    {
+        printf("Please specifiy an algorithm for sceduling. \n 1: HPF \n 2: SRTN\n 3: SJF \n ");
+        scanf("%i", &answer);
+
+        switch (answer)
+        {
+        case 1:
+            printf("Working with HPF \n ");
+            return HPF;
+            break;
+
+         case 2:
+            printf("Working with SRTN \n");
+            return SRTN;
+            break;
+        case 3:
+            printf("Working with SJF \n");
+            return SJF;
+            break;
+
+        
+        default:
+            continue;
+        }  
     }
-
-    WTA = WTA / list->len;
-    return WTA;
 }
+//----------------  struct message  --------------------------------------------------
 
-// double stdWTA(heap_t* list){ // calculate standard derviation of WTA 
-//     double stdWTA = 0;
-//     const int list_length = list->len;
-//     double sum= 0;
-//     double summition =0;
-//     double mean = 0;
-//     heap_t *wait_list = (heap_t *)calloc(1, sizeof(heap_t));
-//     for (int i =0; i < list->len; i++){
-//         process* prcs = pop(list);
-//         sum = sum +  ((prcs->Stoped - prcs->ArrTime) / prcs->Running);
-//         push(wait_list, prcs->ArrTime,prcs);
-//     }
-
-//     mean = sum / list_length;
-
-//    for (int i = 0; i < list_length; i++){
-//     process* prcs = pop(wait_list);
-//     summition = summition + (pow(((prcs->Stoped - prcs->ArrTime) / prcs->Running -mean),2));
-//    }
-
-//    stdWTA = summition/(list_length-1);
-
-//     return stdWTA;
-// } 
-
-struct msgbuff  // buffer to store process in
+/// @brief to store the message
+typedef struct
 {
     long mtype;
     int ID;
     int ArrTime;
     int RunTime;
     int Priority;
-};
+    int memsize;
 
-int main(int argc, char * argv[])
+} msgbuff;
+//------------------  fork clk  --------------------------------------------------
+
+/// @brief function to fork the clk
+void fork_clk()
 {
-    struct msgbuff message;
-    key_t generator_id;
-    int sendp;
-    int recievep;
-
-    int algorithm_num;
-    signal(SIGINT, clearResources);
-    // TODO Initialization
-    // 1. Read the input files.             omarayyad (done)
-    heap_t *list = (heap_t *)calloc(1, sizeof(heap_t));
-
-    list =read_ints("test.txt");
-    // 2. Ask the user for the chosen scheduling algorithm and its parameters, if there are any.   //printf ("enter the algorithim you want    1)jfs   2)sfst   3)jfkdkjf") scanf (int n =1 2 3 )   thabet&saber (done)
-    printf("Algorithms: \n 1- Preemptive Highest Priority First (PHPF). \n 2- Shortest Remaining time Next (SRTN). \n 3- Short Job First (SJF). \n");
-    printf("Which one whould you choose?\t");
-    scanf("%d", &algorithm_num);
-    // 3. Initiate and create the scheduler and clock processes.                   s= scedular (n)   thabet&saber
-    // 4. Use this function after creating the clock process to initialize clock    thabet&saber
-    //initClk();
-    // To get time use this
-    //int x = getClk();
-    //printf("current time is %d\n", x);
-    // TODO Generation Main Loop
-    // 5. Create a data structure for processes and provide it with its parameters.         //we will store the processes as STRUCTS in a LinkedList  ayyad &Nasrah
-    
-    // 6. Send the information to the scheduler at the appropriate time.                    //function(clk,LinkedList) return processToBeSent         nasrah
-
-   generator_id=msgget((key_t)1234, 0666 | IPC_CREAT);
-    
-   while(top(list)!=NULL)
+    int pid;
+    pid= fork();
+    if (pid ==0)
     {
-       if(top(list)->ArrTime<=15)   
-        {
-           process *sendProcess;
-            sendProcess=pop(list);             //copying data of process to buffer
-
-            message.ID=sendProcess->ID;
-            message.ArrTime=sendProcess->ArrTime;
-            message.Priority=sendProcess->Priority;
-            message.RunTime=sendProcess->RunTime;
-            
-            message.mtype=1;
-
-            int size=sizeof(message)-sizeof(message.mtype);
-            printf("%d\n",size);
-            sendp=msgsnd(generator_id,&message,size,!IPC_NOWAIT);
-
-            if(sendp==-1)         //ckeckers
-            {
-                printf("error to send\n");
-                exit(-1);
-            }
-            else
-            {
-                printf("message send\n"); 
-                printf("%d",sendProcess->ID);
-                 
-            }
-
-        }
+        printf("clk is runnint \n");
+        char *args[]= {"./clk.out",NULL};
+        execv(args[0],args);
+        printf("didn'twork");
     }
-    message.ID=0;           //when the reciever should stop, when he find ID=0;
-    message.ArrTime=0;
-    message.Priority=0;
-    message.RunTime=0;
-
-    int size=sizeof(message)-sizeof(message.mtype);
-    sendp=msgsnd(generator_id,&message,size,!IPC_NOWAIT);
-    if(sendp==-1)
-    {
-        printf("error to send\n");
-        exit(-1);
+    else{
+        printf("out of clk\n");
     }
+    
+}
+//---------------  fork scheduler  ------------------------------------------------------
+
+/// @brief function to fork the scheduler 
+/// @return pid
+int fork_schedular()
+{
+    int pid;
+    pid= fork();
+
+    printf("check :%d",pid);
+    if (pid ==0)
+         {
+        printf("check :%d",pid);
+        char *args[]= {"./scheduler.out",get_algo_num(),NULL};
+        execl("./scheduler.out","scheduler.out",get_algo_num(),NULL);
+        perror("Error in execv'ing to scheduler");
+        exit(EXIT_FAILURE);
+
+         }
     else
     {
-        printf("message send\n");
-            
+        return pid;
     }
-
-    // 7. Clear clock resources
-    //destroyClk(true);
 }
+
+
+
+//---------------  main  -----------------------------------------------------------
+int main(int argc, char * argv[])
+{
+//-----------  some initializations  ----------------------
+    key_t key_up =123;
+    upQ = msgget(key_up, IPC_CREAT | 0644);
+    signal(SIGINT, clearResources);
+    char algorithm_num[20];
+//---------------------------------------------------------
+    // TODO Initialization
+    // 1. Read the input files.
+    heap_t *list = (heap_t *)calloc(1, sizeof(heap_t));
+    list =read_ints("test.txt");
+//---------------------------------------------------------
+    // 2. Ask the user for the chosen scheduling algorithm and its parameters, if there are any.
+    chosen_alg =ask_for_alg();
+//---------------------------------------------------------    
+    // 3. Initiate and create the scheduler and clock processes.
+    fork_clk();
+    initClk();      //use this function to initialize the clock
+    fork_schedular(algorithm_num);
+//---------------------------------------------------------
+    // TODO Generation Main Loop
+    // 6. Send the information to the scheduler at the appropriate time.
+    msgbuff mss;
+    while(list->len>0)
+    {
+        if(top(list)->ArrTime <= getClk())
+        {
+        process* proc;
+        proc =pop(list);
+        mss.mtype = 1;
+        mss.ArrTime= proc->ArrTime;
+        mss.ID=proc->ID;
+        mss.Priority=proc->Priority;
+        mss.RunTime=proc->RunTime;
+        printf("check if mss is sent %d\n", getClk());
+        
+        int send_val=msgsnd(upQ, &mss, sizeof(mss) - sizeof(mss.mtype), !IPC_NOWAIT);
+        if(send_val == -1)//if no process is sent
+        {
+            perror("Error in receiving"); 
+        } 
+        }
+    }
+    printf("Sending!! Last");
+    mss.ID=0;
+    int send_val=msgsnd(upQ, &mss, sizeof(mss) - sizeof(mss.mtype), !IPC_NOWAIT);
+    
+    while(!ended){
+    signal(SIGINT, handle); 
+    }
+//-------------------------------------------------------------
+    // 7. Clear clock resources
+    
+    destroyClk(true);
+
+
+}
+
+
+
+
 
 void clearResources(int signum)
 {
-    //TODO Clears all resources in case of interruption             //Qeestion the TA     //think of as the user sends an interrupt so this interrupt to be handeled
+    printf("clearing resources \n");
+    //TODO Clears all resources in case of interruption
+    msgctl(upQ, IPC_RMID, (struct msqid_ds *) 0);
+    exit(0);
 }
+
+
+
+
